@@ -1,0 +1,193 @@
+<html lang="">
+<head>
+    <title>RPG</title>
+    <script src=https://code.jquery.com/jquery-3.6.0.min.js></script>
+    <link href="/css/my.css" rel="stylesheet">
+
+</head>
+<body>
+<h1>RPG admin panel</h1>
+<h2>Account List</h2>
+
+<label>Show
+    <select id="select">
+        <option value="3">3</option>
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="20">20</option>
+    </select>
+    entries
+</label>
+
+<table id="table" style="border-collapse: collapse" border="2">
+    <thead>
+    <tr style="background-color:greenyellow;">
+        <th>#</th>
+        <th>Name</th>
+        <th>Title</th>
+        <th>Race</th>
+        <th>Profession</th>
+        <th>Level</th>
+        <th>Birthday</th>
+        <th>Banned</th>
+        <th>Edit</th>
+        <th>Delete</th>
+    </tr>
+    </thead>
+    <tbody style="background-color:wheat;"></tbody>
+</table>
+<div class="pagination" id="pagination">
+    <p class="pag"> </p>
+</div>
+
+
+<h2>Create new account : </h2>
+<form action="/rest/players">
+    Name:<br>
+    <input type="json" name="name" value="">
+    <br>
+    Title:<br>
+    <input type="json" name="title" value="">
+    <br>
+    Race:<br>
+    <select id="race">
+        <option  value="3">3</option>
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="20">20</option>
+    </select>
+    <br>
+    Profession:<br>
+    <select id="profession">
+        <option  value="WARRIOR">WARRIOR</option>
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="20">20</option>
+    </select>
+    <br>
+    Level:<br>
+    <input type="" name="firstname" value="">
+    <br>
+    Birthday:<br>
+    <input type="" name="lastname" value="">
+    <br>
+    Banned:<br>
+    <input type="" name="firstname" value="">
+    <br>
+    <br><br>
+    <input type="submit" value="Submit">
+</form>
+
+
+</body>
+
+<script>
+    let count = 0;
+    getPlayersCount();
+
+    $(document).ready(function() {
+        getPlayers(null, null);
+        $('#select').on('change', function () {
+            getPlayers(null, this.value);
+
+        });
+    });
+
+    function getPlayersCount() {
+        $.ajax({
+            type: "GET",
+            url: "/rest/players/count",
+            cache: false,
+            async: false,
+            success: function (data) {
+                count = data;
+            }
+        });
+    }
+
+    function getPlayers(pageNumber = null, pageSize = null) {
+
+        let url;
+        let a = "";
+        let pagesCount;
+        let pagesRow = "";
+        if (pageNumber == null) {
+            if (pageSize == null) {
+                url = "/rest/players";
+                pageSize = 3;
+            } else {
+                url = "/rest/players?pageSize=" + pageSize;
+            }
+        } else {
+            url = "/rest/players?pageNumber=" + pageNumber + "&pageSize=" + pageSize;
+        }
+
+        if (pageSize == null) {
+            pagesCount = Math.ceil(count/3);
+        } else {
+            pagesCount = Math.ceil(count/pageSize);
+        }
+
+        $.get(url, function(data){
+            for (let i = 0; i < data.length; i++) {
+                let id = data[i].id;
+                let name = data[i].name;
+                let title = data[i].title;
+                let race = data[i].race;
+                let profession = data[i].profession;
+                let birthday = new Date(data[i].birthday).toLocaleDateString();
+                let banned = data[i].banned;
+                let level = data[i].level;
+
+                a += "<tr id='tr1'>"+
+                    "<td>"+id+"</td>"+"<td>"+name+"</td>"+"<td>"+title+"</td>"+
+                    "<td>"+race+"</td>"+"<td>"+profession+"</td>"+"<td>"+level+"</td>"+
+                    "<td>"+birthday+"</td>"+"<td>"+banned+"</td>"+"<td> <img id='e' src='/img/edit.png'> </td>"+
+                    "<td><a href='#' class='' id='' data-id='"+ id +"' > <img id='"+ id +"' data='"+ data +"' onclick='getDelete(event)' src='/img/delete.png'> </a></td>"+
+                    "</tr>";
+                $("#table tbody").html(a);
+            }
+        });
+
+        if (pagesCount > 0) {
+            pagesRow += "Pages: ";
+            for (let i = 0; i < pagesCount; i++) {
+                let page = i + 1;
+                pagesRow +=
+                    "<a href='#' class='pageLoad' data-pageNumber=' " + i + " ' data-pageSize=' " + pageSize+" ' >" + " " + page + " " + "</a>";
+
+            }
+            $("#pagination p").html(pagesRow);
+
+        }
+
+        paginationClick();
+
+    }
+
+    function paginationClick() {
+        $("#pagination p a").unbind("click");
+        $("#pagination p a").bind("click", function () {
+            $pageNumber = $(this).attr("data-pageNumber");
+            $pageSize = $(this).attr("data-pageSize");
+            getPlayers($pageNumber, $pageSize);
+        });
+    }
+
+
+    function getDelete(e) {
+        console.log(e)
+        let ig=+e.target.id
+        let data1=e.target.data
+        $.ajax({
+            type: "DELETE",
+            url: `/rest/players/${ig}`,
+            success: function (data) {
+                document.getElementById(`${data1}`).remove()
+                location.reload()
+            }
+        });}
+
+
+</script>
+</html>
